@@ -5,17 +5,48 @@ def main():
     negative300_path = "../resources/GoogleNews-vectors-negative300.bin"
     negative300_model = KeyedVectors.load_word2vec_format(negative300_path, binary = True)
 
-    spain_vector = negative300_model["spain"]
-    madrid_vector = negative300_model["madrid"]
-    athens_vector = negative300_model["athens"]
+    questions_words_path = "../resources/questions-words.txt"
 
-    composite_vector = spain_vector - madrid_vector + athens_vector
+    # questions-wordsの特定の変数だけ抜き出すのは今後のことを考えるとベターじゃない気がするので、全部一気に読み込ませる
+
+    # TODO(RinYoshida): 関数用意させたほうがいいよね
+    questions_words = []
+    txt_file = open(questions_words_path, "r", encoding="utf-8")
+    for line in txt_file:
+        line = line.strip()
+        if line.startswith(":"):
+            continue
+        words = line.strip().split()
+        if words:
+            questions_words.append(words)
+
+    txt_file.close()
+
+    txt_file = open("result/64_result.txt", "w", encoding = "utf-8")
+    for i in range(len(questions_words)):
+        composite_vector = negative300_model[questions_words[i][2]] - negative300_model[questions_words[i][1]] + negative300_model[questions_words[i][3]]
+        similar_result = negative300_model.most_similar(composite_vector, topn = 1)
+        similar_word, similarity = similar_result[0]
+        txt_file.write("capital-common-countries "
+                       + questions_words[i][0]
+                       + " "
+                       + questions_words[i][1]
+                       + " "
+                       + questions_words[i][2]
+                       + " "
+                       + questions_words[i][3]
+                       + " "
+                       + similar_word
+                       + " "
+                       + str(similarity)
+                       + "\n"
+                       )
+
+        
+#    composite_vector = negative300_model[questions_words[2]] - negative300_model[questions_words[1]] + negative300_model[questions_words[3]]
     
-    similar_words_united_states = negative300_model.most_similar(composite_vector, topn = 10)
+#    similar_words_united_states = negative300_model.most_similar(composite_vector, topn = 1)
     
-    print("top10 wards =")
-    for word, score in similar_words_united_states:
-        print(f"{word}: {score}")
     
 if __name__ == "__main__":
     main()
