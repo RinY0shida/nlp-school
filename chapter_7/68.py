@@ -1,6 +1,7 @@
 from gensim.models import KeyedVectors
 import pycountry
-from sklearn.cluster import KMeans
+from scipy.cluster.hierarchy import linkage, dendrogram
+import matplotlib.pyplot as plt
 
 def main():
     # pathを通す
@@ -17,14 +18,15 @@ def main():
             countries_vector.append(negative300_model[country.name])
             # print(countries_vector)
 
-    k_means = KMeans(n_clusters = 5, random_state = 0)
-    labels = k_means.fit_predict(countries_vector)
+    # k_means = KMeans(n_clusters = 5, random_state = 0)
+    # labels = k_means.fit_predict(countries_vector)
+    hierarchy_cluster = linkage(countries_vector, method = "ward")
+    # print(hierarchy_cluster)
 
-    for i in range(5):
-        print(f"cluster {i}:")
-        for country_name, label in zip(countries_name, labels):
-            if label ==i:
-                print(country_name)
-                
+    plt.figure(figsize=(24, 8))
+    dendrogram(hierarchy_cluster, labels = countries_name)
+    plt.savefig("result/graph68.png", dpi = 400)
+    plt.show()
+    
 if __name__ == "__main__":
     main()
