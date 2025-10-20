@@ -15,7 +15,7 @@ def main():
         if country.name in negative300_model.key_to_index:
             countries_name.append(country.name)
             countries_vector.append(negative300_model[country.name])
-            print(countries_vector)
+            # print(countries_vector)
 
     k_means = KMeans(n_clusters = 5, random_state = 0)
     labels = k_means.fit_predict(countries_vector)
