@@ -1,34 +1,30 @@
 from gensim.models import KeyedVectors
-import pandas as pd
-from scipy.stats import spearmanr
+import pycountry
+from sklearn.cluster import KMeans
 
 def main():
     # pathを通す
     negative300_path = "../resources/GoogleNews-vectors-negative300.bin"
     negative300_model = KeyedVectors.load_word2vec_format(negative300_path, binary = True)
 
-    human_score = []
-    model_score = []
+    # pycountryを使うのが初めてなので、とりあえず使ってみる
+    countries_name = []
+    countries_vector = []
+    for country in pycountry.countries:
+        # TODO(RinYoshida): なんかモデルに'a'が無い？って言われたから無理やりモデルが存在してるvectorだけ抽出したった。
+        if country.name in negative300_model.key_to_index:
+            countries_name.append(country.name)
+            countries_vector.append(negative300_model[country.name])
+            print(countries_vector)
 
-    conbined_path = "../resources/wordsim353/combined.csv"
-    combined_file = pd.read_csv(conbined_path)
+    k_means = KMeans(n_clusters = 5, random_state = 0)
+    labels = k_means.fit_predict(countries_vector)
 
-    # 各行を順に処理
-    for _, row in combined_file.iterrows():
-        word_1 = row["Word 1"]
-        word_2 = row["Word 2"]
-        human_similarity = row["Human (mean)"]
-
-        if word_1 in negative300_model and word_2 in negative300_model:
-            model_similarity = negative300_model.similarity(word_1, word_2)
-            human_score.append(float(human_similarity))
-            model_score.append(model_similarity)
-            # print(model_similarity)
-
-    # スピアマン相関係数を導出する。人間のスコアとモデルのスコアの比較
-    correlation_coefficient, p_value = spearmanr(human_score, model_score)
-    print(f"correlation coefficient: {correlation_coefficient}")
-    print(f"p_value: {p_value}")
-    
+    for i in range(5):
+        print(f"cluster {i}:")
+        for country_name, label in zip(countries_name, labels):
+            if label ==i:
+                print(country_name)
+                
 if __name__ == "__main__":
     main()
