@@ -1,56 +1,34 @@
 from gensim.models import KeyedVectors
+import pandas as pd
+from scipy.stats import spearmanr
 
 def main():
     # pathを通す
     negative300_path = "../resources/GoogleNews-vectors-negative300.bin"
     negative300_model = KeyedVectors.load_word2vec_format(negative300_path, binary = True)
 
-    questions_words_path = "../resources/questions-words.txt"
+    human_score = []
+    model_score = []
 
-    # questions-wordsの特定の変数だけ抜き出すのは今後のことを考えるとベターじゃない気がするので、全部一気に読み込ませる
+    conbined_path = "../resources/wordsim353/combined.csv"
+    combined_file = pd.read_csv(conbined_path)
 
-    # TODO(RinYoshida): 関数用意させたほうがいいよね
-    questions_words = []
-    txt_file = open(questions_words_path, "r", encoding="utf-8")
-    for line in txt_file:
-        line = line.strip()
-        if line.startswith(":"):
-            category = line[2:]
-            continue
-        words = line.strip().split()
-        if words:
-            words.insert(0, category)
-            questions_words.append(words)
+    # 各行を順に処理
+    for _, row in combined_file.iterrows():
+        word_1 = row["Word 1"]
+        word_2 = row["Word 2"]
+        human_similarity = row["Human (mean)"]
 
-    txt_file.close()
+        if word_1 in negative300_model and word_2 in negative300_model:
+            model_similarity = negative300_model.similarity(word_1, word_2)
+            human_score.append(float(human_similarity))
+            model_score.append(model_similarity)
+            # print(model_similarity)
 
-    txt_file = open("result/ans64.txt", "w", encoding = "utf-8")
-    for i in range(len(questions_words)):
-        composite_vector = negative300_model[questions_words[i][3]] - negative300_model[questions_words[i][2]] + negative300_model[questions_words[i][4]]
-        similar_result = negative300_model.most_similar(composite_vector, topn = 1)
-        similar_word, similarity = similar_result[0]
-        txt_file.write(questions_words[i][0]
-                       + " "
-                       + questions_words[i][1]
-                       + " "
-                       + questions_words[i][2]
-                       + " "
-                       + questions_words[i][3]
-                       + " "
-                       + questions_words[i][4]
-                       + " "
-                       + similar_word
-                       + " "
-                       + str(similarity)
-                       + "\n"
-                       )
-        print(i)
-
-        
-#    composite_vector = negative300_model[questions_words[2]] - negative300_model[questions_words[1]] + negative300_model[questions_words[3]]
-    
-#    similar_words_united_states = negative300_model.most_similar(composite_vector, topn = 1)
-    
+    # スピアマン相関係数を導出する。人間のスコアとモデルのスコアの比較
+    correlation_coefficient, p_value = spearmanr(human_score, model_score)
+    print(f"correlation coefficient: {correlation_coefficient}")
+    print(f"p_value: {p_value}")
     
 if __name__ == "__main__":
     main()
