@@ -1,7 +1,8 @@
 from gensim.models import KeyedVectors
 import pycountry
-from scipy.cluster.hierarchy import linkage, dendrogram
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+import numpy as np
 
 def main():
     # pathを通す
@@ -18,14 +19,16 @@ def main():
             countries_vector.append(negative300_model[country.name])
             # print(countries_vector)
 
-    # k_means = KMeans(n_clusters = 5, random_state = 0)
-    # labels = k_means.fit_predict(countries_vector)
-    hierarchy_cluster = linkage(countries_vector, method = "ward")
-    # print(hierarchy_cluster)
+    countries_vector = np.array(countries_vector)
+    t_sne = TSNE(n_components = 3, random_state = 0)
+    reduced = t_sne.fit_transform(countries_vector)
 
-    plt.figure(figsize=(24, 8))
-    dendrogram(hierarchy_cluster, labels = countries_name)
-    plt.savefig("result/graph68.png", dpi = 400)
+    plt.figure(figsize=(10, 8))
+    
+    for i, country_name in enumerate(countries_name):
+        plt.scatter(reduced[i, 0], reduced[i, 1])
+        plt.text(reduced[i, 0] + 0.1, reduced[i, 1] + 0.1, country_name)
+    plt.savefig("result/graph69.png", dpi = 400)
     plt.show()
     
 if __name__ == "__main__":
