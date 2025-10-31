@@ -8,7 +8,6 @@ def main():
     # pathを通す
     negative300_path = "../resources/GoogleNews-vectors-negative300.bin"
     negative300_model = KeyedVectors.load_word2vec_format(negative300_path, binary = True)
-
     # pycountryを使うのが初めてなので、とりあえず使ってみる
     countries_name = []
     countries_vector = []
@@ -20,7 +19,7 @@ def main():
             # print(countries_vector)
 
     countries_vector = np.array(countries_vector)
-    t_sne = TSNE(n_components = 3, random_state = 0)
+    t_sne = TSNE(n_components = 2, random_state = 0)
     reduced = t_sne.fit_transform(countries_vector)
 
     plt.figure(figsize=(10, 8))
